@@ -39,4 +39,38 @@ with st.form(key='input_form'):
 if submit_button:
     # Encode categorical inputs (same way as model was trained)
     gender_enc = 0 if gender == 'female' else 1
-    race_enc = ["group A","gr"]()_
+    race_enc = ["group A","group B","group C","group D","group E"].index(race)
+    parent_enc = ["some high school","high school","some college",
+                  "associate's degree","bachelor's degree","master's degree"].index(parent_edu)
+    lunch_enc = 0 if lunch == 'free/reduced' else 1
+    prep_enc = 0 if prep == 'none' else 1
+
+    # Create input DataFrame
+    input_data = pd.DataFrame([[gender_enc, race_enc, parent_enc, lunch_enc, prep_enc]],
+                              columns=['gender','race/ethnicity','parental level of education','lunch','test preparation course'])
+
+    # Predict score
+    predicted_score = model.predict(input_data)[0]
+
+    # Display results
+    st.subheader("📘 Predicted Average Exam Score:")
+    st.success(f"{predicted_score:.2f}")
+
+    # Determine grade
+    if predicted_score >= 90:
+        grade = "A+ (Excellent)"
+    elif predicted_score >= 80:
+        grade = "A (Very Good)"
+    elif predicted_score >= 70:
+        grade = "B (Good)"
+    elif predicted_score >= 60:
+        grade = "C (Average)"
+    else:
+        grade = "D (Needs Improvement)"
+
+    st.subheader("🎯 Predicted Grade:")
+    st.info(grade)
+
+# Footer
+st.markdown("---")
+st.caption("Built with ❤️ using Streamlit and Scikit-Learn")
