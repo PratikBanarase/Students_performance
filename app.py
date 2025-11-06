@@ -39,4 +39,4 @@ with st.form(key='input_form'):
 if submit_button:
     # Encode categorical inputs (same way as model was trained)
     gender_enc = 0 if gender == 'female' else 1
-    race_enc = ["group A","gbr]()_
+    race_enc = ["group A","gr"]()_
