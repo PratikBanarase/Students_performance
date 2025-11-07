@@ -22,14 +22,13 @@ st.sidebar.markdown("""
 [LinkedIn](https://www.linkedin.com) | [GitHub](https://github.com) | [Gmail](mailto:example@gmail.com)
 """)
 
-st.sidebar.header("📂 Upload Dataset (optional)")
-uploaded_file = st.sidebar.file_uploader("Upload your CSV file", type=["csv"])
+
 
 # ------------------- LOAD DATASET -------------------
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
 else:
-    df = pd.read_csv("StudentsPerformance.csv")
+    df = pd.read_csv("students_performance.csv")
 
 st.subheader("📊 Dataset Preview")
 st.dataframe(df.head())
