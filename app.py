@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
 
 # --- Configuration and Page Setup ---
@@ -95,13 +96,13 @@ if df is not None:
         options=['math_score', 'reading_score', 'writing_score']
     )
     
-    fig = px.box(
-        df_filtered, 
-        x="gender", 
-        y=score_column, 
-        color="gender",
-        title=f'Distribution of {score_column.replace("_", " ").title()} by Gender'
-    )
+ fig = px.box(
+    df_filtered, 
+    x="gender", 
+    y=score_column, 
+    color="gender",
+    title=f'Distribution of {score_column.replace("_", " ").title()} by Gender'
+)
     st.plotly_chart(fig, use_container_width=True)
 
     # --- Analysis: Parental Education vs. Average Scores ---
