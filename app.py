@@ -1,80 +1,95 @@
-# app.py
 import streamlit as st
 import pandas as pd
-import numpy as np
-import pickle
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.preprocessing import LabelEncoder
 
-# ------------------- PAGE CONFIG -------------------
-st.set_page_config(page_title="Students Performance Predictor", page_icon="🎓", layout="wide")
+# --- Configuration and Page Setup ---
+st.set_page_config(
+    page_title="Student Performance Dashboard",
+    page_icon=":bar_chart:",
+    layout="wide"
+)
 
-# ------------------- HEADER SECTION -------------------
-st.title("🎓 Student Performance Prediction App")
-st.markdown("Predict student exam scores based on study and demographic factors using ML.")
+# ===============================================
+# === Header Bar Section (Main Title) ==========
+# ===============================================
+st.title("📊 Student Performance Analysis Dashboard")
+st.markdown("---") # Separator line for a clean look
 
-# ------------------- SIDEBAR SECTION -------------------
-st.sidebar.header("👤 Data analysts")
-st.sidebar.markdown("""
-**Name:** Pratik Banarse  
-[LinkedIn](https://www.linkedin.com) | [GitHub](https://github.com) | [Gmail](mailto:example@gmail.com)
-""")
+# ===============================================
+# === Sidebar Section (Name and Links) ==========
+# ===============================================
+
+# Define the personal information - REPLACE WITH YOUR DETAILS
+NAME = "Pratik Sudhakar Banarase"
+LINKEDIN_URL = "https://www.linkedin.com/in/pratikbanarse/"
+GITHUB_URL = "https://github.com/PratikBanarase"
+GMAIL_ADDRESS = "pratikbanarse8@gmail.com"
+
+# Sidebar Title
+st.sidebar.header("Data Scientist")
+
+# Developer Name
+st.sidebar.markdown(f"**{Pratik Sudhakar Banarase}**")
+
+# LinkedIn Link
+st.sidebar.markdown(f"**LinkedIn:** [Profile]({https://www.linkedin.com/in/pratikbanarse/})")
+
+# GitHub Link
+st.sidebar.markdown(f"**GitHub:** [Repository]({https://github.com/PratikBanarase})")
+
+# Gmail Link (Mailto)
+st.sidebar.markdown(f"**Gmail:** [{pratikbanarse8@gmail.com}](mailto:{pratikbanarse8@gmail.com})")
+
+st.sidebar.markdown("---")
 
 
+# ===============================================
+# === Main Application Logic (Data Analysis) ====
+# ===============================================
 
-# ------------------- LOAD DATASET -------------------
-df = pd.read_csv("StudentsPerformance.csv")
+# Function to load data with caching for performance
+@st.cache_data
+def load_data(file_path):
+    """Loads the student performance data."""
+    df = pd.read_csv(file_path)
+    return df
 
-st.subheader("📊 Dataset Preview")
-st.dataframe(df.head())
+# Load the data file provided by the user
+FILE_NAME = 'StudentsPerformance.csv'
 
-# ------------------- DATA PREPROCESSING -------------------
-df.columns = df.columns.str.strip()
+try:
+    df = load_data(FILE_NAME)
+    st.success(f"Data '{FILE_NAME}' loaded successfully! Total records: {len(df)}")
 
-le = LabelEncoder()
-for col in ['gender', 'race/ethnicity', 'parental level of education', 'lunch', 'test preparation course']:
-    df[col] = le.fit_transform(df[col])
+    # --- Data Preview ---
+    st.header("1. Raw Data Preview")
+    st.dataframe(df.head(10))
 
-# Features and target
-X = df[['gender', 'race/ethnicity', 'parental level of education', 'lunch', 'test preparation course',
-        'math score', 'reading score']]
-y = df['writing score']
+    # --- Descriptive Statistics ---
+    st.header("2. Descriptive Statistics")
+    st.dataframe(df[['math score', 'reading score', 'writing score']].describe().T)
 
-# ------------------- TRAIN MODEL -------------------
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-model = GradientBoostingRegressor()
-model.fit(X_train, y_train)
+    # --- Simple Visualization ---
+    st.header("3. Math Score Distribution by Gender")
 
-# ------------------- USER INPUT SECTION -------------------
-st.header("🧾 Enter Student Details for Prediction")
+    # Use a radio button in the sidebar for filtering/grouping
+    chart_type = st.sidebar.radio(
+        "Select Chart Type:",
+        ('Bar Chart', 'Histogram')
+    )
 
-gender = st.selectbox("Gender", ("female", "male"))
-race = st.selectbox("Race/Ethnicity", ("group A", "group B", "group C", "group D", "group E"))
-parent_edu = st.selectbox("Parental Level of Education", (
-    "some high school", "high school", "some college", "associate's degree", "bachelor's degree", "master's degree"))
-lunch = st.selectbox("Lunch Type", ("standard", "free/reduced"))
-test_prep = st.selectbox("Test Preparation Course", ("none", "completed"))
-math_score = st.slider("Math Score", 0, 100, 60)
-reading_score = st.slider("Reading Score", 0, 100, 60)
+    if chart_type == 'Bar Chart':
+        # Group data to count average scores
+        avg_scores = df.groupby('gender')[['math score', 'reading score', 'writing score']].mean()
+        st.bar_chart(avg_scores)
+    else:
+        # Show a simple histogram of math scores
+        st.line_chart(df['math score'].value_counts().sort_index())
 
-# Encode user input
-input_data = pd.DataFrame({
-    'gender': [le.fit(df['gender']).transform([gender])[0]],
-    'race/ethnicity': [le.fit(df['race/ethnicity']).transform([race])[0]],
-    'parental level of education': [le.fit(df['parental level of education']).transform([parent_edu])[0]],
-    'lunch': [le.fit(df['lunch']).transform([lunch])[0]],
-    'test preparation course': [le.fit(df['test preparation course']).transform([test_prep])[0]],
-    'math score': [math_score],
-    'reading score': [reading_score]
-})
+except FileNotFoundError:
+    st.error(f"Error: The file **'{FILE_NAME}'** was not found. Please ensure it is in the same folder as your 'app.py' file.")
+except Exception as e:
+    st.error(f"An unexpected error occurred while loading the data: {e}")
 
-# ------------------- PREDICTION -------------------
-if st.button("🎯 Predict Writing Score"):
-    prediction = model.predict(input_data)
-    st.success(f"✅ Predicted Writing Score: **{prediction[0]:.2f}**")
-
-# ------------------- FOOTER -------------------
+# --- Footer ---
 st.markdown("---")
-st.markdown("**Developed by Pratik Banarse** | © 2025 | [GitHub](https://github.com) | [LinkedIn](https://www.linkedin.com)")
+st.markdown("Developed with Streamlit and Python.")
