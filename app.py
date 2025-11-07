@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
 # --- Configuration and Page Setup ---
 st.set_page_config(
@@ -9,87 +10,109 @@ st.set_page_config(
 )
 
 # ===============================================
-# === Header Bar Section (Main Title) ==========
-# ===============================================
-st.title("📊 Student Performance Analysis Dashboard")
-st.markdown("---") # Separator line for a clean look
-
-# ===============================================
 # === Sidebar Section (Name and Links) ==========
 # ===============================================
 
-# Define the personal information - REPLACE WITH YOUR DETAILS
+# --- REPLACE THESE PLACEHOLDERS WITH YOUR ACTUAL DETAILS ---
 NAME = "Pratik Banarase"
 LINKEDIN_URL = "https://www.linkedin.com/in/pratikbanarse/"
 GITHUB_URL = "https://github.com/PratikBanarase"
 GMAIL_ADDRESS = "pratikbanarse8@gmail.com"
+# -----------------------------------------------------------
 
-# Sidebar Title
-st.sidebar.header("Data Scientist")
+with st.sidebar:
+    st.header("👤 Data scientist")
+    st.markdown(f"{PratikBanarase}")
+    
+    # LinkedIn Link
+    st.markdown(f"**LinkedIn:** [Connect Here]({https://www.linkedin.com/in/pratikbanarse/})")
+    
+    # GitHub Link
+    st.markdown(f"**GitHub:** [View Code]({https://github.com/PratikBanarase})")
+    
+    # Gmail Link (Mailto format for clicking)
+    st.markdown(f"**Email:** [{pratikbanarse8@gmail.com}](mailto:{pratikbanarse8@gmail.com})")
+    
+    st.markdown("---")
+    st.info("💡 Use the filters below to explore the data!")
 
-# Developer Name
-st.sidebar.markdown(f"**{Pratik Sudhakar Banarase}**")
-
-# LinkedIn Link
-st.sidebar.markdown(f"**LinkedIn:** [Profile]({https://www.linkedin.com/in/pratikbanarse/})")
-
-# GitHub Link
-st.sidebar.markdown(f"**GitHub:** [Repository]({https://github.com/PratikBanarase})")
-
-# Gmail Link (Mailto)
-st.sidebar.markdown(f"**Gmail:** [{pratikbanarse8@gmail.com}](mailto:{pratikbanarse8@gmail.com})")
-
-st.sidebar.markdown("---")
-
+# ===============================================
+# === Header Bar Section (Main Title) ==========
+# ===============================================
+st.title("📚 Student Performance Analysis Dashboard")
+st.markdown("A simple interactive dashboard analyzing student demographic and academic performance.")
+st.markdown("---") # Separator line for a clean look
 
 # ===============================================
 # === Main Application Logic (Data Analysis) ====
 # ===============================================
 
-# Function to load data with caching for performance
+FILE_NAME = 'StudentsPerformance.csv'
+
+# Function to load data with caching for better performance
 @st.cache_data
 def load_data(file_path):
     """Loads the student performance data."""
-    df = pd.read_csv(file_path)
-    return df
+    try:
+        df = pd.read_csv(file_path)
+        # Clean column names by replacing spaces and '/'
+        df.columns = df.columns.str.replace(r'[ /]', '_', regex=True).str.lower()
+        return df
+    except FileNotFoundError:
+        st.error(f"Error: The file **'{file_path}'** was not found.")
+        return None
+    except Exception as e:
+        st.error(f"An unexpected error occurred while loading the data: {e}")
+        return None
 
-# Load the data file provided by the user
-FILE_NAME = 'StudentsPerformance.csv'
+df = load_data(FILE_NAME)
 
-try:
-    df = load_data(FILE_NAME)
-    st.success(f"Data '{FILE_NAME}' loaded successfully! Total records: {len(df)}")
-
-    # --- Data Preview ---
-    st.header("1. Raw Data Preview")
-    st.dataframe(df.head(10))
-
-    # --- Descriptive Statistics ---
-    st.header("2. Descriptive Statistics")
-    st.dataframe(df[['math score', 'reading score', 'writing score']].describe().T)
-
-    # --- Simple Visualization ---
-    st.header("3. Math Score Distribution by Gender")
-
-    # Use a radio button in the sidebar for filtering/grouping
-    chart_type = st.sidebar.radio(
-        "Select Chart Type:",
-        ('Bar Chart', 'Histogram')
+if df is not None:
+    
+    # Display Data Head
+    st.header("1. Data Overview")
+    st.dataframe(df.head(), use_container_width=True)
+    
+    # Create Filters in the Sidebar
+    st.sidebar.header("Data Filters")
+    selected_gender = st.sidebar.multiselect(
+        "Select Gender:",
+        options=df['gender'].unique(),
+        default=df['gender'].unique()
     )
+    
+    # Filter the DataFrame
+    df_filtered = df[df['gender'].isin(selected_gender)]
+    
+    st.subheader(f"Filtered Data: {len(df_filtered)} Records")
 
-    if chart_type == 'Bar Chart':
-        # Group data to count average scores
-        avg_scores = df.groupby('gender')[['math score', 'reading score', 'writing score']].mean()
-        st.bar_chart(avg_scores)
-    else:
-        # Show a simple histogram of math scores
-        st.line_chart(df['math score'].value_counts().sort_index())
+    # --- Analysis: Score Distribution ---
+    st.header("2. Score Distributions")
+    
+    # Box plot showing score distribution by gender
+    score_column = st.selectbox(
+        "Select Score to Visualize:",
+        options=['math_score', 'reading_score', 'writing_score']
+    )
+    
+    fig = px.box(
+        df_filtered, 
+        x="gender", 
+        y=score_column, 
+        color="gender",
+        title=f'Distribution of {score_column.replace("_", " ").title()} by Gender'
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
-except FileNotFoundError:
-    st.error(f"Error: The file **'{FILE_NAME}'** was not found. Please ensure it is in the same folder as your 'app.py' file.")
-except Exception as e:
-    st.error(f"An unexpected error occurred while loading the data: {e}")
+    # --- Analysis: Parental Education vs. Average Scores ---
+    st.header("3. Parental Education vs. Average Scores")
+    
+    avg_scores_by_parent_ed = df_filtered.groupby('parental_level_of_education')[['math_score', 'reading_score', 'writing_score']].mean().reset_index()
+    avg_scores_by_parent_ed = avg_scores_by_parent_ed.sort_values(by='math_score', ascending=False)
+    
+    st.bar_chart(avg_scores_by_parent_ed.set_index('parental_level_of_education'))
+
 
 # --- Footer ---
 st.markdown("---")
-st.markdown("Developed with Streamlit and Python.")
+st.markdown("Developed with ❤️ using Streamlit and Pandas.")
