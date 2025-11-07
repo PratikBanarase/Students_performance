@@ -23,7 +23,7 @@ GMAIL_ADDRESS = "pratikbanarse8@gmail.com"
 
 with st.sidebar:
     st.header("👤 Data scientist")
-    st.markdown(f"{Pratik Banarase}")
+    st.markdown(f"**{Pratik Banarase}**")
     
     # LinkedIn Link
     st.markdown(f"**LinkedIn:** [Connect Here]({https://www.linkedin.com/in/pratikbanarse/})")
