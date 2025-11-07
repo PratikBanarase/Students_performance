@@ -1,118 +1,101 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
+# -------------------------------
+# PAGE CONFIGURATION
+# -------------------------------
+st.set_page_config(page_title="Students Performance Dashboard", layout="wide")
 
+# -------------------------------
+# SIDEBAR SECTION
+# -------------------------------
+st.sidebar.title("📊 Students Performance App")
+st.sidebar.markdown("**Created by: Pratik Banarase**")
+st.sidebar.markdown("[🔗 LinkedIn](https://www.linkedin.com/in/pratikbanarse/)")
+st.sidebar.markdown("[💻 GitHub](https://github.com/PratikBanarase)")
+st.sidebar.markdown("✉️ pratikbanars8e@gmail.com")
 
+st.sidebar.header("⚙️ Controls")
+uploaded_file = st.sidebar.file_uploader("Upload StudentsPerformance.csv", type=["csv"])
 
-# --- Configuration and Page Setup ---
-st.set_page_config(
-    page_title="Student Performance Dashboard",
-    page_icon=":bar_chart:",
-    layout="wide"
-)
+# -------------------------------
+# LOAD DATA
+# -------------------------------
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+else:
+    df = pd.read_csv("StudentsPerformance.csv")
 
-# ===============================================
-# === Sidebar Section (Name and Links) ==========
-# ===============================================
+st.title("🎓 Students Performance Analysis Dashboard")
 
-# --- REPLACE THESE PLACEHOLDERS WITH YOUR ACTUAL DETAILS ---
-NAME = "Pratik Banarase"
-LINKEDIN_URL = "https://www.linkedin.com/in/pratikbanarse/"
-GITHUB_URL = "https://github.com/PratikBanarase"
-GMAIL_ADDRESS = "pratikbanarse8@gmail.com"
-# -----------------------------------------------------------
+st.markdown("""
+This dashboard allows you to explore the **Students Performance dataset** interactively.
+You can visualize how various factors (gender, parental education, test preparation, etc.) 
+affect student scores across subjects.
+""")
 
-with st.sidebar:
-    st.header("👤 Data scientist")
-    st.markdown("Pratik Banarase")
+# -------------------------------
+# DATA PREVIEW
+# -------------------------------
+st.subheader("📂 Dataset Preview")
+st.dataframe(df.head())
 
-    
-    # LinkedIn Link
-    st.markdown(f"**LinkedIn:** [Connect Here]({https://www.linkedin.com/in/pratikbanarse/})")
-    
-    # GitHub Link
-    st.markdown(f"**GitHub:** [View Code]({https://github.com/PratikBanarase})")
-    
-    # Gmail Link (Mailto format for clicking)
-    st.markdown(f"**Email:** [{pratikbanarse8@gmail.com}](mailto:{pratikbanarse8@gmail.com})")
-    
-    st.markdown("---")
-    st.info("💡 Use the filters below to explore the data!")
+# -------------------------------
+# BASIC INFO
+# -------------------------------
+st.subheader("📈 Dataset Summary")
+col1, col2, col3 = st.columns(3)
+col1.metric("Total Students", df.shape[0])
+col2.metric("Total Columns", df.shape[1])
+col3.metric("Unique Genders", df['gender'].nunique())
 
-# ===============================================
-# === Header Bar Section (Main Title) ==========
-# ===============================================
-st.title("📚 Student Performance Analysis Dashboard")
-st.markdown("A simple interactive dashboard analyzing student demographic and academic performance.")
-st.markdown("---") # Separator line for a clean look
+st.write("### Statistical Summary")
+st.dataframe(df.describe())
 
-# ===============================================
-# === Main Application Logic (Data Analysis) ====
-# ===============================================
+# -------------------------------
+# VISUALIZATION SECTION
+# -------------------------------
+st.subheader("📊 Visualizations")
 
-FILE_NAME = 'StudentsPerformance.csv'
+# Select columns for visualization
+x_axis = st.selectbox("Select X-axis", df.columns)
+y_axis = st.selectbox("Select Y-axis", df.select_dtypes(include='number').columns)
 
-# Function to load data with caching for better performance
-@st.cache_data
-def load_data(file_path):
-    """Loads the student performance data."""
-    try:
-        df = pd.read_csv(file_path)
-        # Clean column names by replacing spaces and '/'
-        df.columns = df.columns.str.replace(r'[ /]', '_', regex=True).str.lower()
-        return df
-    except FileNotFoundError:
-        st.error(f"Error: The file **'{file_path}'** was not found.")
-        return None
-    except Exception as e:
-        st.error(f"An unexpected error occurred while loading the data: {e}")
-        return None
+# Box Plot
+st.write("### Box Plot")
+fig_box = px.box(df, x=x_axis, y=y_axis, color=x_axis,
+                 title=f"Boxplot of {y_axis} by {x_axis}")
+st.plotly_chart(fig_box, use_container_width=True)
 
-df = load_data(FILE_NAME)
+# Histogram
+st.write("### Distribution of Scores")
+selected_score = st.selectbox("Select Score Column", 
+                              ['math score', 'reading score', 'writing score'])
+fig_hist = px.histogram(df, x=selected_score, nbins=20, color='gender',
+                        title=f"Distribution of {selected_score}")
+st.plotly_chart(fig_hist, use_container_width=True)
 
-if df is not None:
-    
-    # Display Data Head
-    st.header("1. Data Overview")
-    st.dataframe(df.head(), use_container_width=True)
-    
-    # Create Filters in the Sidebar
-    st.sidebar.header("Data Filters")
-    selected_gender = st.sidebar.multiselect(
-        "Select Gender:",
-        options=df['gender'].unique(),
-        default=df['gender'].unique()
-    )
-    
-    # Filter the DataFrame
-    df_filtered = df[df['gender'].isin(selected_gender)]
-    
-    st.subheader(f"Filtered Data: {len(df_filtered)} Records")
+# Scatter Plot
+st.write("### Correlation Between Scores")
+fig_scatter = px.scatter(df, x='math score', y='reading score',
+                         color='gender', size='writing score',
+                         title='Math vs Reading Scores (bubble size = Writing score)')
+st.plotly_chart(fig_scatter, use_container_width=True)
 
-    # --- Analysis: Score Distribution ---
-    st.header("2. Score Distributions")
-    
-    # Box plot showing score distribution by gender
-    score_column = st.selectbox(
-        "Select Score to Visualize:",
-        options=['math_score', 'reading_score', 'writing_score']
-    )
-    
-if show_boxplot:
-    fig = px.box(df, x='gender', y='math score', title='Boxplot of Math Scores by Gender')
-    st.plotly_chart(fig)
+# -------------------------------
+# INSIGHTS
+# -------------------------------
+st.subheader("🧠 Insights")
+st.markdown("""
+- **Gender differences:** Compare average scores by gender.
+- **Parental education impact:** Observe how parental education affects performance.
+- **Test preparation:** Students who completed test preparation tend to score higher.
+""")
 
-    st.plotly_chart(fig, use_container_width=True)
-
-    # --- Analysis: Parental Education vs. Average Scores ---
-    st.header("3. Parental Education vs. Average Scores")
-    
-    avg_scores_by_parent_ed = df_filtered.groupby('parental_level_of_education')[['math_score', 'reading_score', 'writing_score']].mean().reset_index()
-    avg_scores_by_parent_ed = avg_scores_by_parent_ed.sort_values(by='math_score', ascending=False)
-    
-    st.bar_chart(avg_scores_by_parent_ed.set_index('parental_level_of_education'))
-
-
-# --- Footer ---
+# -------------------------------
+# FOOTER
+# -------------------------------
 st.markdown("---")
-st.markdown("Developed with ❤️ using Streamlit and Pandas.")
+st.markdown("📘 **Developed by Pratik Banarase** | Using Streamlit + Plotly + Pandas")
+
