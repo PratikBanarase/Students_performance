@@ -97,13 +97,10 @@ if df is not None:
         options=['math_score', 'reading_score', 'writing_score']
     )
     
- fig = px.box(
-    df_filtered, 
-    x="gender", 
-    y=score_column, 
-    color="gender",
-    title=f'Distribution of {score_column.replace("_", " ").title()} by Gender'
-)
+if show_boxplot:
+    fig = px.box(df, x='gender', y='math score', title='Boxplot of Math Scores by Gender')
+    st.plotly_chart(fig)
+
     st.plotly_chart(fig, use_container_width=True)
 
     # --- Analysis: Parental Education vs. Average Scores ---
