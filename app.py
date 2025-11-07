@@ -25,10 +25,7 @@ st.sidebar.markdown("""
 
 
 # ------------------- LOAD DATASET -------------------
-if uploaded_file is not None:
-    df = pd.read_csv("StudentsPerformance.csv")
-else:
-    df = pd.read_csv("StudentsPerformance.csv")
+df = pd.read_csv("StudentsPerformance.csv")
 
 st.subheader("📊 Dataset Preview")
 st.dataframe(df.head())
