@@ -19,7 +19,7 @@ st.markdown("---") # Separator line for a clean look
 # ===============================================
 
 # Define the personal information - REPLACE WITH YOUR DETAILS
-NAME = "Pratik Sudhakar Banarase"
+NAME = "Pratik Banarase"
 LINKEDIN_URL = "https://www.linkedin.com/in/pratikbanarse/"
 GITHUB_URL = "https://github.com/PratikBanarase"
 GMAIL_ADDRESS = "pratikbanarse8@gmail.com"
